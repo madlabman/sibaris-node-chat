@@ -1,0 +1,15 @@
+'use strict';
+
+const GET_USERS = 'GET_USERS';
+const GET_MESSAGES = 'GET_MESSAGES';
+const SEND_MESSAGE = 'SEND_MESSAGE';
+const NEW_MESSAGE = 'NEW_MESSAGE';
+const DELETE_MESSAGES = 'DELETE_MESSAGES';
+
+module.exports = {
+    GET_USERS,
+    GET_MESSAGES,
+    SEND_MESSAGE,
+    NEW_MESSAGE,
+    DELETE_MESSAGES
+};
