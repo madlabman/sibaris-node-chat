@@ -16,8 +16,8 @@ const messageSchema = mongoose.Schema({
         required: true
     },
     sender: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        type: mongoose.Schema.Types.String,
+        required: true
     }
 }, {
     timestamps: true // Автоматически управляет полями createdAt и updatedAt

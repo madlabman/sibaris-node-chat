@@ -5,10 +5,10 @@ const messageModel = require('../db').models.message;
 const MESSAGES_PER_PAGE = 30; // Максимальное количество сообщений, которое можно получить за раз
 
 // Добавление нового сообщения в переписку
-const addMessage = (conversation, sender, body) => {
+const addMessage = (conversation, senderId, body, cb) => {
     new messageModel({
         conversationId: conversation._id,
-        sender: sender._id,
+        sender: senderId,
         body
     })
         .save(cb);
