@@ -53,10 +53,10 @@ const ioServer = server => {
     const userId = socket.decoded_token.data.userId; // TODO: Обновить readme
     const partnerId = socket.handshake.query.partnerId;
 
-    const socketLogin = socket.decoded_token.data.login;
-    session.addSocketByLogin(socketLogin, socket.id); // При подключениии пользователя записывать ID сокета в redis
+    session.saveSocket(socket); // При подключениии пользователя запоминаем сессию
+
     socket.on('disconnect', () => {
-      session.removeSocketByLogin(socketLogin, socket.id); // При отключении сокет выпиливается из списка
+      session.removeSocketFromSession(socket); // При отключении сокет удаляется из сессии
     });
 
     // Запрос списка сообщений
@@ -100,7 +100,19 @@ const ioServer = server => {
             return;
           }
 
-          io.emit(events.NEW_MESSAGE, dbMessage); // Send to all TODO: fix
+          // Отправляем во все сокеты с этой перепиской
+          session.getSessionConnections(socket, (err, socketIds) => {
+            if (err) {
+              logger.log('error', err);
+              return;
+            }
+
+            if (socketIds) {
+              socketIds.forEach(id => {
+                io.to(id).emit(events.NEW_MESSAGE, dbMessage); // Новое сообщение
+              });
+            }
+          });
         });
       });
     });
