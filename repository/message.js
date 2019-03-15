@@ -2,38 +2,60 @@
 
 const messageModel = require('../db').models.message;
 
-const MESSAGES_PER_PAGE = 30; // Максимальное количество сообщений, которое можно получить за раз
+/**
+ * Максимальное количество сообщений, которое можно получить за раз
+ * @constant
+ * @type {number}
+ */
+const MESSAGES_PER_PAGE = 30;
 
-// Добавление нового сообщения в переписку
-const addMessage = (conversation, senderId, body, cb) => {
-    new messageModel({
-        conversationId: conversation._id,
-        sender: senderId,
-        body
-    })
-        .save(cb);
+/**
+ * Добавление нового сообщения в переписку
+ * @async
+ * @param {mongoose.Model} conversation - Объект переписки
+ * @param {string} senderId - Идентификатор пользователя
+ * @param {string} body - Текст сообщения
+ * @returns {Promise}
+ */
+const addMessage = (conversation, senderId, body) => {
+  return new messageModel({
+    conversationId: conversation._id,
+    sender: senderId,
+    body
+  }).save();
 };
 
-// Постраничная загрузка послдених сообщений из переписки
-const getLastMessagesFromConversation = (conversation, page, cb) => {
-    messageModel.find({
-        conversationId: conversation._id
-    })
-        .sort('-createdAt')
-        .skip(page * MESSAGES_PER_PAGE) // Постраничная загрузка
-        .limit(MESSAGES_PER_PAGE)
-        .exec(cb);
+/**
+ * Постраничная загрузка последних сообщений из переписки
+ * @async
+ * @param {mongoose.Model} conversation - Объект переписки
+ * @param {number} page - Страница для выдачи (начиная с нуля)
+ * @returns {Promise}
+ */
+const getLastMessagesFromConversation = (conversation, page) => {
+  if (!page) page = 0;
+  return messageModel.find({
+    conversationId: conversation._id
+  })
+    .sort('-createdAt')
+    .skip(page * MESSAGES_PER_PAGE) // Постраничная загрузка
+    .limit(MESSAGES_PER_PAGE)
+    .exec();
 };
 
-// Удаление сообщений из переписки
-const removeMessagesFromConversation = (conversation, cb) => {
-    messageModel.remove({
-        conversationId: conversation._id
-    }, cb);
+/**
+ * Удаление сообщений из переписки
+ * @param {mongoose.Model} conversation - Объект переписки
+ * @returns {Promise}
+ */
+const removeMessagesFromConversation = conversation => {
+  return messageModel.remove({
+    conversationId: conversation._id
+  }).exec();
 };
 
 module.exports = {
-    addMessage,
-    getLastMessagesFromConversation,
-    removeMessagesFromConversation
+  addMessage,
+  getLastMessagesFromConversation,
+  removeMessagesFromConversation
 };

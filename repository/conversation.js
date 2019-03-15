@@ -2,31 +2,53 @@
 
 const conversationModel = require('../db').models.conversation;
 
-// Создает новую переписку между пользователями
+/**
+ * Создание новой переписки между пользователями
+ * @param {string} userId - Идентификатор пользователя 1
+ * @param {string} partnerId - Идентификатор пользователя 2
+ * @returns {Promise}
+ */
 const addConversation = (userId, partnerId) => {
   return new conversationModel({
     participants: [userId, partnerId]
-  });
+  }).save();
 };
 
-// Получает переписку между пользователями
-const getConversation = (userId, partnerId, cb) => {
-  conversationModel.findOne({
+/**
+ * Получение переписки между пользователями
+ * @param {string} userId - Идентификатор пользователя 1
+ * @param {string} partnerId - Идентификатор пользователя 2
+ * @returns {Promise}
+ */
+const findConversation = (userId, partnerId) => {
+  return conversationModel.findOne({
     participants: {$all: [userId, partnerId]}
-  })
-    .exec(cb);
+  }).exec();
 };
 
-// Удаление переписки
-// Не приводит к удалению связанных сообщений
-const deleteConversation = (conversation, cb) => {
-  conversationModel.deleteOne({
+/**
+ * Возвращает переписку с указанным идентификатором
+ * @param {string} conversationId
+ * @returns {Promise}
+ */
+const getConversationById = conversationId => {
+  return conversationModel.findById(conversationId).exec();
+};
+
+/**
+ * Удаление переписки. Не приводит к удалению связанных сообщений
+ * @param {mongoose.Model} conversation - Объект переписки
+ * @returns {Promise}
+ */
+const removeConversation = conversation => {
+  return conversationModel.deleteOne({
     _id: conversation._id
-  }, cb);
+  }).exec();
 };
 
 module.exports = {
   addConversation,
-  getConversation,
-  deleteConversation
+  findConversation,
+  getConversationById,
+  removeConversation
 };

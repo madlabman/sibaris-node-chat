@@ -2,9 +2,12 @@
 
 const userModel = require('../db').models.user;
 
-// Получить всех пользователей
-const getAll = cb => {
-    userModel.find({}, cb);
+/**
+ * Получить всех пользователей
+ * @returns {Promise}
+ */
+const getAll = () => {
+    return userModel.find({}).exec();
 };
 
 module.exports = {

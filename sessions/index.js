@@ -2,60 +2,61 @@
 
 const logger = require('../logger');
 const redis = require('redis');
+const config = require('config').get('redis');
 
-const config = (() => {
-  if (process.env.NODE_ENV === 'production') {
-    return {
-      REDIS_HOST: process.env.redisHost,
-      REDIS_PORT: process.env.redisPort
-    }
-  } else {
-    return {
-      REDIS_HOST: '127.0.0.1',
-      REDIS_PORT: '6379'
-    }
-  }
-})();
+const client = redis.createClient(config.port, config.host);
 
-const client = redis.createClient(config.REDIS_PORT, config.REDIS_HOST);
-
+// Подключились к Redis'у
 client.on('connect', () => {
   logger.log('info', 'Connection to Redis successfully established');
 });
 
+// Ошибка
 client.on('error', err => {
   logger.log('error', err.message);
 });
 
-const getSessionKeyFromSocket = socket => {
-  // Для пары пользователей выбирает один ключ - комбинация id этих пользователей
-  // Данные пользователей извлекаются из токена, переданного при авторизации
-  // Тем самым сторонний сервер дает доступ пользователю к диалогу с другим пользователем
-  return [
-    socket.decoded_token.data.userId,
-    socket.decoded_token.data.partnerId
-  ].sort().join(':'); // Получает что-то вроде abc:def, где abc и def - идентификаторы пользователей
+const store = (key, value) => {
+  client.set(key, value); // Ключ - значение
+  client.sadd(value, key); // Значение - [массив ключей] - для обратного поиска
 };
 
-// В текущей модели сессия представляет собой чат между двумя пользователями
-// Ключ сессии может быть получен из токена
-// Как вариант в качестве ключа сессии можно использовать идентификатор модели Conversation из базы данных
-const saveSocket = socket => {
-  const sessionKey = getSessionKeyFromSocket(socket);
-  client.sadd(sessionKey, socket.id); // Мы сохраняем в список id сокета, чтобы отправлять сообщения во все подключения пользователей-участников
+const remove = key => {
+  get(key)
+    .then(value => {
+      if (value) {
+        client.srem(value, key);
+      }
+    });
+  client.del(key);
 };
 
-const getSessionConnections = (socket, cb) => {
-  client.smembers(getSessionKeyFromSocket(socket), cb);
+const get = key => {
+  return new Promise((resolve, reject) => {
+    client.get(key, (err, item) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(item);
+    })
+  });
 };
 
-const removeSocketFromSession = socket => {
-  client.srem(getSessionKeyFromSocket(socket), socket.id);
+const getAllByValue = value => {
+  return new Promise((resolve, reject) => {
+    client.smembers(value, (err, items) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(items);
+    });
+  });
 };
 
 module.exports = {
   client,
-  saveSocket,
-  getSessionConnections,
-  removeSocketFromSession
+  store,
+  remove,
+  get,
+  getAllByValue
 };

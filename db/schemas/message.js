@@ -7,20 +7,20 @@ const mongoose = require('mongoose');
 // Если хранить сообщения как вложенный массив переписки, документ может сильно разрастись
 // Хранение сообщений в отдельных документах также позволяет легко масштабировать базу данных
 const messageSchema = mongoose.Schema({
-    conversationId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
-    body: {
-        type: mongoose.Schema.Types.String,
-        required: true
-    },
-    sender: {
-        type: mongoose.Schema.Types.String,
-        required: true
-    }
+  conversationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
+  body: {
+    type: mongoose.Schema.Types.String,
+    required: true
+  },
+  sender: {
+    type: mongoose.Schema.Types.String,
+    required: true
+  }
 }, {
-    timestamps: true // Автоматически управляет полями createdAt и updatedAt
+  timestamps: true // Автоматически управляет полями createdAt и updatedAt
 });
 
 const messageModel = mongoose.model('Message', messageSchema);

@@ -1,0 +1,20 @@
+{
+  "mongo": {
+    "host": "127.0.0.1",
+    "port": 27017,
+    "db": "sibaris-chat",
+    "user": "chat-user",
+    "password": "1234"
+  },
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379
+  },
+  "server": {
+    "port": 3000
+  },
+  "io": {
+    "socket_path": "/chat",
+    "jwt_key": "some_secret_key"
+  }
+}

@@ -57,6 +57,10 @@
       -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
       background-color: #555;
     }
+
+    #clear-chat {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -64,6 +68,10 @@
 <!--<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>-->
 <!-- А эта не минифицированна, для разработки -->
 <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<!-- Подключаем скрипт для красивого отображения даты -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<!-- Подключаем русский язык -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/ru.js"></script>
 <!-- Клиент socket.io автоматически предоставляется сервером чата -->
 <script src="http://127.0.0.1:3000/chat/socket.io.js"></script>
 <!-- Код чата, реализован как плагин для jQuery -->
@@ -73,7 +81,7 @@
   (function ($) {
     $(document).ready(function ($) {
       var chatUri = 'http://127.0.0.1:3000'; // Адрес сервера чата
-      var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9leGFtcGxlLm9yZyIsImF1ZCI6Imh0dHA6XC9cL2V4YW1wbGUuY29tIiwiaWF0IjoxNTUyNTg0MzM4LCJleHAiOjE1NTI2MDQzMzgsImRhdGEiOnsidXNlcklkIjoiMTIzIiwicGFydG5lcklkIjoiNDU2In19.JmP5YoZGaEjfBxPwGavJk_RBSj3qKDoSfzmPscxL8GE'; // Токен для авторизации на сервере чата, подробнее в readme
+      var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NTI2NjEzMDIsImV4cCI6MTU1Mjg2MTMwMiwiZGF0YSI6eyJ1c2VySWQiOiIxMjMiLCJwYXJ0bmVySWQiOiIxMjMifX0.HikZnyjDkrNAWofMvYfgh1QhAk8ZIQJV9nZ-mw1V9dA'; // Токен для авторизации на сервере чата, подробнее в readme
       // token = null; // Токен для авторизации на сервере чата, подробнее в readme
       var partnerId = '123'; // Идентификатор собеседника
       var participants = { // Объект с деталями профиля участников переписки
@@ -82,8 +90,8 @@
           avatar: 'http://placehold.it/50/55C1E7/fff&text=A'
         },
         me: { // Собеседник
-          name: 'Bob',
-          avatar: 'http://placehold.it/50/FA6F57/fff&text=B'
+          name: 'Alice',
+          avatar: 'http://placehold.it/50/55C1E7/fff&text=A'
         }
       };
       var socket = io(chatUri, { // Подключаемся к серверу чата
@@ -95,17 +103,22 @@
         transports: ['websocket'], // Инструкция клиенту использовать только вебсокет
         autoConnect: false, // Подключение будет открыто плагином
       });
+      var dateFormat = function (date) { // Функция форматирования даты
+        moment.locale('fr');
+        return moment(date).format('D MMMM HH:mm:SS');
+      };
       // Инициализация чата и передача параметров
       $('#chat').chat({
         partnerId,
         socket,
-        participants
+        participants,
+        dateFormat
       }).show();
     });
   }(jQuery));
 </script>
 <!-- Окно чата скрыто от пользователя до окончания инициализации или нажатия на кнопку "Начать чат" -->
-<div id="chat" style="display: none;">
+<div id="chat" style="display: none;" data-page="1">
   <!-- Разметка шаблона чата -->
   <div class="container">
     <div class="row">
@@ -113,6 +126,7 @@
         <div class="panel panel-primary">
           <div class="panel-heading" id="accordion">
             <span class="glyphicon glyphicon-comment"></span> Чат
+            <span class="pull-right" id="clear-chat">Очистить</span>
           </div>
           <div class="panel-collapse">
             <div class="panel-body">
