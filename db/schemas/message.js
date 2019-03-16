@@ -18,7 +18,10 @@ const messageSchema = mongoose.Schema({
   sender: {
     type: mongoose.Schema.Types.String,
     required: true
-  }
+  },
+  deletedFor: [{
+    type: mongoose.Schema.Types.String
+  }]
 }, {
   timestamps: true // Автоматически управляет полями createdAt и updatedAt
 });

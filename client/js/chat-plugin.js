@@ -71,7 +71,7 @@
       // Добавить HTML сообщения в чат
       function addMessageToChat(message, toTheEnd = true) {
         // Формируем html-код
-        var isSentByMe = message.sender !== settings.partnerId;
+        var isSentByMe = message.sender === settings.partnerId;
         var align = isSentByMe ? 'left' : 'right'; // Проверяем, от кого сообщение
         var meOrPartner = isSentByMe ? 'me' : 'partner';
         var messageDate = settings.dateFormat === null ? message.createdAt : settings.dateFormat(message.createdAt);
@@ -121,8 +121,10 @@
       });
 
       // Получили событие очистки чата
-      settings.socket.on('DELETE_MESSAGES', function () {
-        self.find('ul.chat').html(null);
+      settings.socket.on('DELETE_MESSAGES', function (userId) {
+        if (userId !== settings.partnerId) {
+          self.find('ul.chat').html(null);
+        }
       });
 
       // Обработка нажатия на кнопку очистить

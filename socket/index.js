@@ -9,7 +9,6 @@ const socketIoJwt = require('socketio-jwt');
 const events = require('./eventsTypes');
 
 const Session = require('../sessions');
-const User = require('../repository/user');
 const Conversation = require('../repository/conversation');
 const Message = require('../repository/message');
 
@@ -52,18 +51,18 @@ const ioServer = server => {
   // Привязка событий
   io.on('connection', socket => {
     // Парсинг переменных подключения
-    const userId = socket.decoded_token.data.userId; // TODO: Обновить readme
-    const partnerId = socket.decoded_token.data.partnerId;
+    const USER_ID = socket.decoded_token.data.userId;
+    const PARTNER_ID = socket.decoded_token.data.partnerId;
 
     // Добавляем в сессию, ключ - идентификатор сокета, значение - идентификатор переписки
     // Подключение = переписка
     // Ищем переписку в базе данных
-    Conversation.findConversation(userId, partnerId)
+    Conversation.findConversation(USER_ID, PARTNER_ID)
       .then(conversation => {
         if (conversation) {
           Session.store(socket.id, conversation._id.toString());
         } else {
-          Conversation.addConversation(userId, partnerId)
+          Conversation.addConversation(USER_ID, PARTNER_ID)
             .then(conversation => {
               Session.store(socket.id, conversation._id.toString());
             });
@@ -87,7 +86,7 @@ const ioServer = server => {
               .then(conversation => {
                 if (conversation) {
                   // Возвращаем в сокет массив сообщений
-                  Message.getLastMessagesFromConversation(conversation, page)
+                  Message.getLastMessagesFromConversation(conversation, USER_ID, page)
                     .then(messages => {
                       socket.emit(events.MESSAGES_LIST, messages);
                     })
@@ -110,7 +109,7 @@ const ioServer = server => {
               .then(conversation => {
                 if (conversation) {
                   // Добавляем новое сообщение
-                  Message.addMessage(conversation, userId, text)
+                  Message.addMessage(conversation, USER_ID, text)
                     .then(message => {
                       // Отправляем сообщение во все сокеты, связанные с перепиской
                       broadcastToConversation(conversationId, events.NEW_MESSAGE, message);
@@ -134,11 +133,11 @@ const ioServer = server => {
               .then(conversation => {
                 if (conversation) {
                   // Удаляем сообщения
-                  Message.removeMessagesFromConversation(conversation)
+                  Message.markMessagesAsDeleted(conversation, USER_ID)
                     .then(() => {
                       // Переписку можно не удалять
                       // Сообщаем всем клиентам, что надо очистить список сообщений
-                      broadcastToConversation(conversationId, events.DELETE_MESSAGES, null);
+                      broadcastToConversation(conversationId, events.DELETE_MESSAGES, USER_ID);
                     });
                 }
               })

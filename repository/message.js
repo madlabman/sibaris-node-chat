@@ -29,13 +29,17 @@ const addMessage = (conversation, senderId, body) => {
  * Постраничная загрузка последних сообщений из переписки
  * @async
  * @param {mongoose.Model} conversation - Объект переписки
+ * @param {string} userId - Идентификатор пользователя
  * @param {number} page - Страница для выдачи (начиная с нуля)
  * @returns {Promise}
  */
-const getLastMessagesFromConversation = (conversation, page) => {
+const getLastMessagesFromConversation = (conversation, userId, page) => {
   if (!page) page = 0;
   return messageModel.find({
-    conversationId: conversation._id
+    conversationId: conversation._id,
+    deletedFor: {
+      $nin: [userId]
+    }
   })
     .sort('-createdAt')
     .skip(page * MESSAGES_PER_PAGE) // Постраничная загрузка
@@ -54,8 +58,25 @@ const removeMessagesFromConversation = conversation => {
   }).exec();
 };
 
+/**
+ * Пометка сообщений как удаленных
+ * @param conversation
+ * @param userId
+ * @returns {Promise}
+ */
+const markMessagesAsDeleted = (conversation, userId) => {
+  return messageModel.updateMany({
+    conversationId: conversation._id
+  }, {
+    $push: {
+      deletedFor: userId
+    }
+  }).exec();
+};
+
 module.exports = {
   addMessage,
   getLastMessagesFromConversation,
-  removeMessagesFromConversation
+  removeMessagesFromConversation,
+  markMessagesAsDeleted
 };

@@ -81,14 +81,15 @@
   (function ($) {
     $(document).ready(function ($) {
       var chatUri = 'http://127.0.0.1:3000'; // Адрес сервера чата
-      var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NTI3MjcwODIsImV4cCI6MTU1MjkyNzA4MiwiZGF0YSI6eyJ1c2VySWQiOiJib2IiLCJwYXJ0bmVySWQiOiJhbGljZSJ9fQ.ybpMJpqVONOWgjgW5NlxQHqtMmWtvRfIgV-ItwDLSYo'; // Токен для авторизации на сервере чата, подробнее в readme
-      var partnerId = 'alice'; // Идентификатор собеседника
+      var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NTI3MjcwMjksImV4cCI6MTU1MjkyNzAyOSwiZGF0YSI6eyJ1c2VySWQiOiJhbGljZSIsInBhcnRuZXJJZCI6ImJvYiJ9fQ.timsoUeHKGQtzIgQXqwLlBN8rzXBXHJnbp3IXWRfBYM'; // Токен для авторизации на сервере чата, подробнее в readme
+      // token = null; // Токен для авторизации на сервере чата, подробнее в readme
+      var partnerId = 'bob'; // Идентификатор собеседника
       var participants = { // Объект с деталями профиля участников переписки
-        partner: { // Авторизованный пользователь
+        me: { // Авторизованный пользователь
           name: 'Alice',
           avatar: 'http://placehold.it/50/55C1E7/fff&text=A'
         },
-        me: { // Собеседник
+        partner: { // Собеседник
           name: 'Bob',
           avatar: 'http://placehold.it/50/FFADAD/fff&text=B'
         }
