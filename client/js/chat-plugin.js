@@ -69,7 +69,10 @@
       });
 
       // Добавить HTML сообщения в чат
-      function addMessageToChat(message, toTheEnd = true) {
+      function addMessageToChat(message, toTheEnd) {
+        if (toTheEnd === null) {
+          toTheEnd = true; // IE
+        }
         // Формируем html-код
         var isSentByMe = message.sender === settings.partnerId;
         var align = isSentByMe ? 'left' : 'right'; // Проверяем, от кого сообщение

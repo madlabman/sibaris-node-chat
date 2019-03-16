@@ -96,8 +96,8 @@
       var socket = io(chatUri, { // Подключаемся к серверу чата
         path: '/chat', // Путь для подключения к сокету
         query: {
-          token, // Авторизация на сервере с помощью токена, из которого сервер парсит userId
-          partnerId // Сервер получает id пользователя с которым будет вестись диалог
+          token: token, // Авторизация на сервере с помощью токена, из которого сервер парсит userId
+          partnerId: partnerId // Сервер получает id пользователя с которым будет вестись диалог
         },
         transports: ['websocket'], // Инструкция клиенту использовать только вебсокет
         autoConnect: false, // Подключение будет открыто плагином
@@ -108,10 +108,10 @@
       };
       // Инициализация чата и передача параметров
       $('#chat').chat({
-        partnerId,
-        socket,
-        participants,
-        dateFormat
+        partnerId: partnerId,
+        socket: socket,
+        participants: participants,
+        dateFormat: dateFormat
       }).show();
     });
   }(jQuery));
