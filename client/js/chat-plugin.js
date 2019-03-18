@@ -69,10 +69,7 @@
       });
 
       // Добавить HTML сообщения в чат
-      function addMessageToChat(message, toTheEnd) {
-        if (toTheEnd === null) {
-          toTheEnd = true; // IE
-        }
+      function addMessageToChat(message, toTheHead) {
         // Формируем html-код
         var isSentByMe = message.sender === settings.partnerId;
         var align = isSentByMe ? 'left' : 'right'; // Проверяем, от кого сообщение
@@ -91,11 +88,11 @@
         ].join('\n');
         // Вставляем в переписку
         var chatElem = self.find('ul.chat');
-        if (toTheEnd) {
-          chatElem.append(mHtml); // В конец
-          scrollMessagesToTheLastOne();
-        } else {
+        if (toTheHead) {
           chatElem.prepend(mHtml); // В начало
+        } else {
+          chatElem.append(mHtml); // В конец
+          scrollMessagesToTheLastOne(); 
         }
       }
 
@@ -107,7 +104,7 @@
       // Получили список сообщений
       settings.socket.on('MESSAGES_LIST', function (messages) {
         messages.forEach(function (message) {
-          addMessageToChat(message, false); // Вставляем сообщения в начало диалога один за одним
+          addMessageToChat(message, true); // Вставляем сообщения в начало диалога один за одним
         });
         // Если первая страница, значит надо прокрутить в конец
         var page = self.data('page') || 1;
