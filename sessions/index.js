@@ -3,8 +3,10 @@
 const logger = require('../logger');
 const redis = require('redis');
 const config = require('config').get('redis');
+const redisScan = require('node-redis-scan');
 
 const client = redis.createClient(config.port, config.host);
+const scanner = new redisScan(client);
 
 // Подключились к Redis'у
 client.on('connect', () => {
@@ -17,17 +19,85 @@ client.on('error', err => {
 });
 
 const store = (key, value) => {
-  client.set(key, value); // Ключ - значение
-  client.sadd(value, key); // Значение - [массив ключей] - для обратного поиска
+  client.set(key, JSON.stringify(value)); // Ключ - значение
+};
+
+/**
+ * Сохраняет сессию для сокета и переписки
+ * @param {string} conversationId - Идентификатор переписки
+ * @param {string} socketId - Идентификатор сокета
+ * @param {object} data - Данные для записи в сессию
+ */
+const storeIoSession = (conversationId, socketId, data = {}) => {
+  const key = `io:${conversationId}:${socketId}`; // <conversation_id>:<socket_id>
+  const value = {
+    updatedAt: Date.now(),
+    ...data // Разворачивает поля объекта data
+  } // Данные для записи
+  store(key, JSON.stringify(value));
+};
+
+/**
+ * Удаляет сессию, связанную с сокетом
+ * @param {string} socketId - Идентификатор сокета
+ */
+const removeIoSession = socketId => {
+  // Найти ключи по маске и удалить
+  scanner.scan(`io:*:${socketId}`, (err, keys) => {
+    if (err) {
+      logger.log('error', `Unable to SCAN redis keys: ${err}`);
+      return;
+    }
+
+    keys.forEach(key => {
+      remove(key);
+    });
+  });
+};
+
+/**
+ * Получение списка сокетов по идентификатору переписки
+ * @param {string} conversationId - Идентификатор переписки
+ * @returns {Promise}
+ */
+const getSocketsByConversation = conversationId => {
+  return new Promise((resolve, reject) => {
+    scanner.scan(`io:${conversationId}:*`, (err, keys) => {
+      if (err) {
+        reject(err);
+      }
+      // Получение сокетов - парсим ключ, чтобы не делать лишний запрос
+      const sockets = [];
+      keys.forEach(key => {
+        const keyArray = key.split(':');
+        sockets.push(keyArray[2]);
+      });
+      resolve(sockets);
+    });
+  });
+};
+
+/**
+ * Получения переписки по идентификатору сокета
+ * @param {string} socketId - Идентификатор сокета
+ * @returns {Promise}
+ */
+const getConversationBySocket = socketId => {
+  return new Promise((resolve, reject) => {
+    scanner.scan(`io:*:${socketId}`, (err, keys) => {
+      if (err) {
+        reject(err);
+      }
+      // Получение переписки - парсим ключ, чтобы не делать лишний запрос
+      if (keys.length) {
+        resolve(keys[0].split(':')[1])
+      }
+      reject();
+    });
+  });
 };
 
 const remove = key => {
-  get(key)
-    .then(value => {
-      if (value) {
-        client.srem(value, key);
-      }
-    });
   client.del(key);
 };
 
@@ -37,7 +107,7 @@ const get = key => {
       if (err) {
         reject(err);
       }
-      resolve(item);
+      resolve(JSON.parse(item));
     })
   });
 };
@@ -58,5 +128,8 @@ module.exports = {
   store,
   remove,
   get,
-  getAllByValue
+  storeIoSession,
+  removeIoSession,
+  getSocketsByConversation,
+  getConversationBySocket
 };

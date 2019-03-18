@@ -16,5 +16,8 @@
   "io": {
     "socket_path": "/chat",
     "jwt_key": "some_secret_key"
+  },
+  "backend": {
+    "notify_endpoint": "some_uri"
   }
 }

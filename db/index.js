@@ -15,10 +15,10 @@ mongoose.Promise = global.Promise; // Default promise is deprecated
 mongoose.set('useCreateIndex', true); // Suppress warning
 mongoose.connect(dbURI, {useNewUrlParser: true})
   .then(() => {
-      logger.log('info', 'Connection to MongoDB successfully established')
+      logger.log('info', 'Connection to MongoDB successfully established');
     },
     err => {
-      logger.log('error', err);
+      logger.log('error', 'Unable to establish connection with MongoDB');
     }
   );
 

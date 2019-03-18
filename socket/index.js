@@ -11,6 +11,7 @@ const events = require('./eventsTypes');
 const Session = require('../sessions');
 const Conversation = require('../repository/conversation');
 const Message = require('../repository/message');
+const BackendNotifier = require('./backendNotifier');
 
 const ioServer = server => {
   const io = new Server(server, {
@@ -35,9 +36,9 @@ const ioServer = server => {
     }
   }));
 
-  const broadcastToConversation = (sessionValue, event, data) => {
+  const broadcastToConversation = (conversationId, event, data) => {
     // Сокеты получаем по значениям в сессии
-    Session.getAllByValue(sessionValue)
+    Session.getSocketsByConversation(conversationId)
       .then(sockets => {
         sockets.forEach(socket => {
           io.to(socket).emit(event, data);
@@ -60,11 +61,18 @@ const ioServer = server => {
     Conversation.findConversation(USER_ID, PARTNER_ID)
       .then(conversation => {
         if (conversation) {
-          Session.store(socket.id, conversation._id.toString());
+          Session.storeIoSession(conversation._id.toString(), socket.id, {
+            userId: USER_ID,
+            connectedAt: Date.now()
+          });
         } else {
           Conversation.addConversation(USER_ID, PARTNER_ID)
             .then(conversation => {
-              Session.store(socket.id, conversation._id.toString());
+              Session.storeIoSession(conversation._id.toString(), socket.id, {
+                userId: USER_ID,
+                connectedAt: Date.now(),
+                newConversation: true
+              });
             });
         }
       })
@@ -73,13 +81,13 @@ const ioServer = server => {
       });
 
     socket.on('disconnect', () => {
-      Session.remove(socket.id); // При отключении сокет удаляется из сессии
+      Session.removeIoSession(socket.id); // При отключении сокет удаляется из сессии
     });
 
     // Запрос списка сообщений
     socket.on(events.GET_MESSAGES, page => {
       // Получаем идентификатор переписки из сессии
-      Session.get(socket.id)
+      Session.getConversationBySocket(socket.id)
         .then(conversationId => {
           if (conversationId) {
             Conversation.getConversationById(conversationId) // Находим переписку
@@ -102,7 +110,7 @@ const ioServer = server => {
     // Отправка нового сообщения
     socket.on(events.SEND_MESSAGE, text => {
       // Получаем идентификатор переписки из сессии
-      Session.get(socket.id)
+      Session.getConversationBySocket(socket.id)
         .then(conversationId => {
           if (conversationId) {
             Conversation.getConversationById(conversationId) // Находим переписку
@@ -113,6 +121,8 @@ const ioServer = server => {
                     .then(message => {
                       // Отправляем сообщение во все сокеты, связанные с перепиской
                       broadcastToConversation(conversationId, events.NEW_MESSAGE, message);
+                      // Отправка уведомления на бэкенд
+                      BackendNotifier.sendNotification(USER_ID, PARTNER_ID);
                     });
                 }
               })
