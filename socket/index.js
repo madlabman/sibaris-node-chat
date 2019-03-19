@@ -136,7 +136,7 @@ const ioServer = server => {
     // Удаление сообщений
     socket.on(events.DELETE_MESSAGES, () => {
       // Получаем идентификатор переписки из сессии
-      Session.get(socket.id)
+      Session.getConversationBySocket(socket.id)
         .then(conversationId => {
           if (conversationId) {
             Conversation.getConversationById(conversationId) // Находим переписку
