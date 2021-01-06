@@ -10,7 +10,7 @@
   "author": "chtotonetak",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "config": "^3.0.1",
     "http": "^0.0.0",
     "mongoose": "^5.4.18",
